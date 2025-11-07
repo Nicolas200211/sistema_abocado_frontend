@@ -1,4 +1,6 @@
 import { apiClient } from './client';
+import { mockDishes } from '../mockData';
+import { mockTables } from './tables.api';
 
 export interface OrderItem {
   id: string;
@@ -40,6 +42,9 @@ export interface UpdateOrderItemDto {
   status?: 'pending' | 'preparing' | 'ready';
 }
 
+
+let mockOrders: Order[] = [];
+
 export const ordersApi = {
   getAll: (params?: { status?: string; tableId?: string }) => {
     const query = new URLSearchParams();
@@ -51,7 +56,46 @@ export const ordersApi = {
 
   getOne: (id: string) => apiClient.get<Order>(`/orders/${id}`),
 
-  create: (data: CreateOrderDto) => apiClient.post<Order>('/orders', data),
+  
+  
+  create: async (data: CreateOrderDto): Promise<Order> => {
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    
+    const total = data.items.reduce((sum, item) => {
+      const dish = mockDishes.find(d => d.id === item.dishId);
+      return sum + (dish ? dish.price * item.quantity : 0);
+    }, 0);
+
+    
+    const order: Order = {
+      id: `order-${Date.now()}`,
+      tableId: data.tableId,
+      items: data.items.map((item, index) => ({
+        id: `item-${Date.now()}-${index}`,
+        dishId: item.dishId,
+        quantity: item.quantity,
+        notes: item.notes,
+        status: 'pending' as const,
+      })),
+      status: 'active',
+      createdAt: new Date(),
+      total: total * 1.1, 
+    };
+
+    
+    const table = mockTables.find(t => t.id === data.tableId);
+    if (table) {
+      table.status = 'occupied';
+      table.currentOrderId = order.id;
+      table.partySize = data.partySize;
+    }
+
+    mockOrders.push(order);
+    
+    return Promise.resolve(order);
+  },
 
   update: (id: string, data: UpdateOrderDto) =>
     apiClient.patch<Order>(`/orders/${id}`, data),

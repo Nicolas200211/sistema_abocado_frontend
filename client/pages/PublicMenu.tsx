@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { dishesApi, Dish } from '@/lib/api';
-import { Filter, ChefHat, Clock } from 'lucide-react';
+import { Filter, ChefHat, Clock, LogIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 type CategoryFilter = 'all' | 'principal' | 'lado' | 'bebida' | 'postre';
 
@@ -82,9 +84,20 @@ export default function PublicMenu() {
                 <p className="text-slate-400">Nuestra carta de platos</p>
               </div>
             </div>
-            <div className="text-right hidden sm:block">
-              <p className="text-sm text-slate-400">Platos disponibles</p>
-              <p className="text-2xl font-bold text-orange-500">{filteredDishes.length}</p>
+            <div className="flex items-center gap-4">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm text-slate-400">Platos disponibles</p>
+                <p className="text-2xl font-bold text-orange-500">{filteredDishes.length}</p>
+              </div>
+              <Link to="/login">
+                <Button
+                  variant="outline"
+                  className="border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white"
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Acceso Personal
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -109,32 +122,38 @@ export default function PublicMenu() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-10 justify-items-center">
           {filteredDishes.map((dish) => (
             <Card
               key={dish.id}
-              className="bg-slate-800 border-slate-700 hover:border-orange-500 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/20 hover:scale-105"
+              className="w-full max-w-[280px] sm:max-w-[320px] min-h-[360px] bg-slate-800 border-slate-700 hover:border-orange-500 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/20 hover:scale-105 overflow-hidden flex flex-col"
             >
-              <CardHeader>
-                <div className="flex items-start justify-between mb-3">
-                  <div className="text-5xl">{dish.image}</div>
-                  <Badge className={cn('text-white', getCategoryColor(dish.category))}>
+              <div className="relative h-48 w-full overflow-hidden">
+                <img 
+                  src={dish.image} 
+                  alt={dish.name}
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                />
+                <div className="absolute top-3 right-3">
+                  <Badge className={cn('text-white shadow-lg', getCategoryColor(dish.category))}>
                     {dish.category}
                   </Badge>
                 </div>
+              </div>
+              <CardHeader>
                 <CardTitle className="text-white text-xl">{dish.name}</CardTitle>
                 <CardDescription className="text-slate-400 line-clamp-2">
                   {dish.description}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between border-t border-slate-700 pt-3">
                   <div className="flex items-center gap-2 text-slate-400 text-sm">
                     <Clock className="w-4 h-4" />
                     <span>{dish.prepTime} min</span>
                   </div>
                   <div className="text-2xl font-bold text-orange-500">
-                    ${dish.price.toFixed(2)}
+                    S/ {dish.price.toFixed(2)}
                   </div>
                 </div>
               </CardContent>

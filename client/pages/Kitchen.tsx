@@ -191,7 +191,7 @@ export default function Kitchen() {
   return (
     <Layout>
       <div className="space-y-8">
-        {/* Header */}
+        
         <div className="text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
             <Flame className="w-8 h-8 text-orange-600" />
@@ -205,9 +205,9 @@ export default function Kitchen() {
           </p>
         </div>
 
-        {/* KPI Cards */}
+        
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {/* Pendientes */}
+          
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-50 to-red-100 p-6 border border-red-200 shadow-lg">
             <div className="absolute top-0 right-0 w-24 h-24 bg-red-200 rounded-full -mr-8 -mt-8 opacity-20"></div>
             <div className="relative z-10">
@@ -226,7 +226,7 @@ export default function Kitchen() {
             </div>
           </div>
 
-          {/* En Preparación */}
+          
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 p-6 border border-amber-200 shadow-lg">
             <div className="absolute top-0 right-0 w-24 h-24 bg-amber-200 rounded-full -mr-8 -mt-8 opacity-20"></div>
             <div className="relative z-10">
@@ -243,7 +243,7 @@ export default function Kitchen() {
             </div>
           </div>
 
-          {/* Listos */}
+          
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 border border-emerald-200 shadow-lg">
             <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-200 rounded-full -mr-8 -mt-8 opacity-20"></div>
             <div className="relative z-10">
@@ -263,9 +263,9 @@ export default function Kitchen() {
           </div>
         </div>
 
-        {/* Kanban Board */}
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Column: Pendientes */}
+          
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-4 h-4 rounded-full bg-red-500"></div>
@@ -296,7 +296,7 @@ export default function Kitchen() {
             </div>
           </div>
 
-          {/* Column: En Preparación */}
+          
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-4 h-4 rounded-full bg-amber-500"></div>
@@ -329,7 +329,7 @@ export default function Kitchen() {
             </div>
           </div>
 
-          {/* Column: Listos */}
+          
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-4 h-4 rounded-full bg-emerald-500"></div>

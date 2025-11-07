@@ -34,7 +34,7 @@ export default function Index() {
   return (
     <Layout>
       <div className="space-y-8">
-        {/* Page Title */}
+        
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
           <p className="text-slate-400">
@@ -42,9 +42,9 @@ export default function Index() {
           </p>
         </div>
 
-        {/* Main KPIs */}
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Occupancy */}
+          
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -66,7 +66,7 @@ export default function Index() {
             <p className="text-xs text-slate-500 mt-2">{occupancyRate}% ocupación</p>
           </div>
 
-          {/* Pendientes */}
+          
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -84,7 +84,7 @@ export default function Index() {
             </p>
           </div>
 
-          {/* En Preparación */}
+          
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -100,7 +100,7 @@ export default function Index() {
             <p className="text-xs text-slate-500">En cocina ahora</p>
           </div>
 
-          {/* Listos */}
+          
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -117,9 +117,9 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Secondary Metrics */}
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Revenue */}
+          
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <p className="text-slate-400 text-sm font-semibold uppercase tracking-wide">
@@ -128,12 +128,12 @@ export default function Index() {
               <TrendingUp className="w-5 h-5 text-green-500" />
             </div>
             <p className="text-3xl font-bold text-white">
-              ${stats.revenue.toFixed(2)}
+              S/ {stats.revenue.toFixed(2)}
             </p>
             <p className="text-xs text-slate-500 mt-2">Órdenes completadas</p>
           </div>
 
-          {/* Active Orders */}
+          
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <p className="text-slate-400 text-sm font-semibold uppercase tracking-wide">
@@ -145,7 +145,7 @@ export default function Index() {
             <p className="text-xs text-slate-500 mt-2">En proceso</p>
           </div>
 
-          {/* Available Tables */}
+          
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <p className="text-slate-400 text-sm font-semibold uppercase tracking-wide">
@@ -160,9 +160,9 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Status Summary */}
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Items by Status */}
+          
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
             <h2 className="text-lg font-bold text-white mb-6">
               Estado de Ítems
@@ -194,7 +194,7 @@ export default function Index() {
             </div>
           </div>
 
-          {/* System Status */}
+          
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
             <h2 className="text-lg font-bold text-white mb-6">
               Estado del Sistema

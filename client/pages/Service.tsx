@@ -22,7 +22,7 @@ export default function Service() {
   return (
     <Layout>
       <div className="space-y-8">
-        {/* Header */}
+        
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Servicio</h1>
           <p className="text-slate-400">
@@ -31,7 +31,7 @@ export default function Service() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Tables List */}
+          
           <div className="lg:col-span-2">
             <div className="space-y-3">
               <p className="text-sm font-semibold text-slate-400 uppercase tracking-wide">
@@ -68,7 +68,7 @@ export default function Service() {
                             {table.currentOrder?.items.length || 0} platos
                           </p>
                           <p className="font-bold text-orange-500 text-sm mt-1">
-                            ${table.currentOrder?.total.toFixed(2) || "0.00"}
+                            S/ {table.currentOrder?.total.toFixed(2) || "0.00"}
                           </p>
                         </div>
                       </div>
@@ -79,7 +79,7 @@ export default function Service() {
             </div>
           </div>
 
-          {/* Order Details */}
+          
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-4">
               {selectedTable ? (
@@ -120,7 +120,7 @@ export default function Service() {
                                 </span>
                               </div>
                               <p className="text-slate-400 text-xs">
-                                ${(dish.price * item.quantity).toFixed(2)}
+                                S/ {(dish.price * item.quantity).toFixed(2)}
                               </p>
                             </div>
                           );
@@ -131,7 +131,7 @@ export default function Service() {
                         <div className="flex justify-between items-center mb-4 text-lg font-bold">
                           <span className="text-white">Total:</span>
                           <span className="text-orange-500">
-                            ${selectedTable.currentOrder.total.toFixed(2)}
+                            S/ {selectedTable.currentOrder.total.toFixed(2)}
                           </span>
                         </div>
 

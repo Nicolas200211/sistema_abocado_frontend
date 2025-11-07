@@ -35,13 +35,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
-    const response: LoginResponse = await authApi.login(credentials);
+    
+    
+    
+    
+    const username = credentials.username.toLowerCase();
+    let role: 'admin' | 'chef' | 'waiter' = 'admin';
+    
+    if (username === 'admin') {
+      role = 'admin';
+    } else if (username === 'chef') {
+      role = 'chef';
+    } else if (username === 'mozo') {
+      role = 'waiter';
+    }
+    
+    const mockResponse: LoginResponse = {
+      access_token: 'mock-token-' + Date.now(),
+      user: {
+        id: '1',
+        username: credentials.username || 'usuario',
+        role: role,
+      },
+    };
 
-    setToken(response.access_token);
-    setUser(response.user);
+    setToken(mockResponse.access_token);
+    setUser(mockResponse.user);
 
-    localStorage.setItem('token', response.access_token);
-    localStorage.setItem('user', JSON.stringify(response.user));
+    localStorage.setItem('token', mockResponse.access_token);
+    localStorage.setItem('user', JSON.stringify(mockResponse.user));
   };
 
   const logout = () => {

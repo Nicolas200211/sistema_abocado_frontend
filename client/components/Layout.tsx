@@ -17,21 +17,30 @@ interface NavItem {
   label: string;
   href: string;
   icon: ReactNode;
+  roles: ('admin' | 'chef' | 'waiter')[];
 }
 
-const navItems: NavItem[] = [
-  { label: "Dashboard", href: "/", icon: <BarChart3 className="w-5 h-5" /> },
-  { label: "Mesas", href: "/tables", icon: <Users className="w-5 h-5" /> },
-  { label: "Carta", href: "/menu", icon: <BookOpen className="w-5 h-5" /> },
+const allNavItems: NavItem[] = [
+  { label: "Dashboard", href: "/dashboard", icon: <BarChart3 className="w-5 h-5" />, roles: ['admin', 'chef', 'waiter'] },
+  { label: "Mesas", href: "/tables", icon: <Users className="w-5 h-5" />, roles: ['admin', 'waiter'] },
+  { label: "Carta", href: "/menu", icon: <BookOpen className="w-5 h-5" />, roles: ['admin', 'chef', 'waiter'] },
   {
     label: "Cocina",
     href: "/kitchen",
     icon: <ChefHat className="w-5 h-5" />,
+    roles: ['admin', 'chef'],
   },
   {
     label: "Servicio",
     href: "/service",
     icon: <UtensilsCrossed className="w-5 h-5" />,
+    roles: ['admin', 'waiter'],
+  },
+  {
+    label: "Administración",
+    href: "/admin",
+    icon: <BarChart3 className="w-5 h-5" />,
+    roles: ['admin'],
   },
 ];
 
@@ -58,13 +67,18 @@ export default function Layout({ children }: LayoutProps) {
     return roles[role as keyof typeof roles] || role;
   };
 
+  
+  const navItems = user 
+    ? allNavItems.filter(item => item.roles.includes(user.role))
+    : [];
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-50 flex flex-col">
-      {/* Header */}
+      
       <header className="bg-slate-950 border-b border-slate-800 shadow-lg">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-3">
+            <Link to="/dashboard" className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center font-bold text-white">
                 A
               </div>
@@ -119,7 +133,7 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
 
-      {/* Navigation */}
+      
       <nav className="bg-slate-900 border-b border-slate-800 px-6">
         <div className="flex gap-0 overflow-x-auto">
           {navItems.map((item) => (
@@ -140,14 +154,14 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </nav>
 
-      {/* Main Content */}
+      
       <main className="flex-1 px-6 py-8">
         <div className="max-w-7xl mx-auto">
           {children}
         </div>
       </main>
 
-      {/* Footer */}
+      
       <footer className="bg-slate-950 border-t border-slate-800 mt-12">
         <div className="px-6 py-4 text-center text-slate-500 text-xs">
           <p>© 2024 Abocado - Sistema de Gestión de Restaurante | Versión 1.0</p>
