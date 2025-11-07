@@ -74,7 +74,7 @@ export default function PublicMenu() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <div className="sticky top-0 z-10 bg-slate-950 bg-opacity-95 backdrop-blur-sm border-b border-slate-700 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
                 <ChefHat className="w-8 h-8 text-white" />
@@ -84,7 +84,7 @@ export default function PublicMenu() {
                 <p className="text-slate-400">Nuestra carta de platos</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 sm:justify-end">
               <div className="text-right hidden sm:block">
                 <p className="text-sm text-slate-400">Platos disponibles</p>
                 <p className="text-2xl font-bold text-orange-500">{filteredDishes.length}</p>
@@ -101,32 +101,34 @@ export default function PublicMenu() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 overflow-x-auto pb-2">
+          <div className="flex items-center gap-3 overflow-x-auto sm:overflow-visible pb-2">
             <Filter className="w-5 h-5 text-slate-500 flex-shrink-0" />
-            {categories.map((cat) => (
-              <button
-                key={cat.value}
-                onClick={() => setCategory(cat.value)}
-                className={cn(
-                  'px-4 py-2 rounded-lg font-semibold transition-all duration-200 whitespace-nowrap text-sm',
-                  category === cat.value
-                    ? 'bg-orange-600 text-white shadow-lg scale-105'
-                    : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-600 hover:bg-slate-700'
-                )}
-              >
-                {cat.label}
-              </button>
-            ))}
+            <div className="flex gap-3 flex-wrap">
+              {categories.map((cat) => (
+                <button
+                  key={cat.value}
+                  onClick={() => setCategory(cat.value)}
+                  className={cn(
+                    'px-4 py-2 rounded-lg font-semibold transition-all duration-200 whitespace-nowrap text-sm',
+                    category === cat.value
+                      ? 'bg-orange-600 text-white shadow-lg scale-105'
+                      : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-600 hover:bg-slate-700'
+                  )}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-10 justify-items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8 justify-items-center">
           {filteredDishes.map((dish) => (
             <Card
               key={dish.id}
-              className="w-full max-w-[280px] sm:max-w-[320px] min-h-[360px] bg-slate-800 border-slate-700 hover:border-orange-500 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/20 hover:scale-105 overflow-hidden flex flex-col"
+              className="w-full max-w-[320px] sm:max-w-[340px] min-h-[360px] bg-slate-800 border-slate-700 hover:border-orange-500 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/20 hover:scale-105 overflow-hidden flex flex-col"
             >
               <div className="relative h-48 w-full overflow-hidden">
                 <img 
