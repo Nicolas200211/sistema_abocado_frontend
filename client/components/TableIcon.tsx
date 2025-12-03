@@ -44,7 +44,7 @@ export default function TableIcon({
       )}
       title={`Mesa ${table.number}`}
     >
-      
+      {/* Table Icon */}
       <div className="relative mb-1">
         <Square
           className={cn("w-8 h-8", config.text)}
@@ -53,12 +53,12 @@ export default function TableIcon({
         />
       </div>
 
-      
+      {/* Table Number */}
       <span className={cn("text-lg font-bold", config.text)}>
         {table.number}
       </span>
 
-      
+      {/* Occupancy indicator */}
       {table.partySize ? (
         <span className={cn("text-xs font-semibold", config.text)}>
           {table.partySize}/{table.capacity}

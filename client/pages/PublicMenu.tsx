@@ -22,11 +22,12 @@ export default function PublicMenu() {
   const loadDishes = async () => {
     try {
       setLoading(true);
+      setError('');
       const data = await dishesApi.getAll();
       setDishes(data);
     } catch (err) {
-      setError('Error al cargar los platos');
-      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar los platos';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -71,10 +72,10 @@ export default function PublicMenu() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
       <div className="sticky top-0 z-10 bg-slate-950 bg-opacity-95 backdrop-blur-sm border-b border-slate-700 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
                 <ChefHat className="w-8 h-8 text-white" />
@@ -84,93 +85,107 @@ export default function PublicMenu() {
                 <p className="text-slate-400">Nuestra carta de platos</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 sm:justify-end">
+            <div className="flex items-center gap-4">
               <div className="text-right hidden sm:block">
                 <p className="text-sm text-slate-400">Platos disponibles</p>
                 <p className="text-2xl font-bold text-orange-500">{filteredDishes.length}</p>
               </div>
               <Link to="/login">
-                <Button
-                  variant="outline"
-                  className="border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white"
-                >
+                <Button variant="outline" className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700">
                   <LogIn className="w-4 h-4 mr-2" />
-                  Acceso Personal
+                  Acceso Trabajadores
                 </Button>
               </Link>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 overflow-x-auto sm:overflow-visible pb-2">
+          <div className="flex items-center gap-3 overflow-x-auto pb-2">
             <Filter className="w-5 h-5 text-slate-500 flex-shrink-0" />
-            <div className="flex gap-3 flex-wrap">
-              {categories.map((cat) => (
-                <button
-                  key={cat.value}
-                  onClick={() => setCategory(cat.value)}
-                  className={cn(
-                    'px-4 py-2 rounded-lg font-semibold transition-all duration-200 whitespace-nowrap text-sm',
-                    category === cat.value
-                      ? 'bg-orange-600 text-white shadow-lg scale-105'
-                      : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-600 hover:bg-slate-700'
-                  )}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
+            {categories.map((cat) => (
+              <button
+                key={cat.value}
+                onClick={() => setCategory(cat.value)}
+                className={cn(
+                  'px-4 py-2 rounded-lg font-semibold transition-all duration-200 whitespace-nowrap text-sm',
+                  category === cat.value
+                    ? 'bg-orange-600 text-white shadow-lg scale-105'
+                    : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-600 hover:bg-slate-700'
+                )}
+              >
+                {cat.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8 justify-items-center">
+      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        {filteredDishes.length === 0 ? (
+          <div className="flex items-center justify-center min-h-[calc(100vh-300px)]">
+            <p className="text-slate-400 text-lg text-center">No hay platos disponibles en esta categoría</p>
+          </div>
+        ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredDishes.map((dish) => (
             <Card
               key={dish.id}
-              className="w-full max-w-[320px] sm:max-w-[340px] min-h-[360px] bg-slate-800 border-slate-700 hover:border-orange-500 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/20 hover:scale-105 overflow-hidden flex flex-col"
+              className="bg-slate-800 border-slate-700 hover:border-orange-500 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/20 hover:scale-105"
             >
-              <div className="relative h-48 w-full overflow-hidden">
-                <img 
-                  src={dish.image} 
-                  alt={dish.name}
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                />
-                <div className="absolute top-3 right-3">
-                  <Badge className={cn('text-white shadow-lg', getCategoryColor(dish.category))}>
-                    {dish.category}
-                  </Badge>
+              <CardHeader className="p-0">
+                <div className="relative">
+                  {dish.image.startsWith('http') ? (
+                    <img 
+                      src={dish.image} 
+                      alt={dish.name}
+                      className="w-full h-48 object-cover rounded-t-lg"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const fallback = target.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = 'flex';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-48 flex items-center justify-center text-6xl bg-slate-700/50 rounded-t-lg">
+                      {dish.image}
+                    </div>
+                  )}
+                  {dish.image.startsWith('http') && (
+                    <div className="w-full h-48 flex items-center justify-center text-6xl bg-slate-700/50 rounded-t-lg hidden">
+                      🍽️
+                    </div>
+                  )}
+                  <div className="absolute top-3 right-3">
+                    <Badge className={cn('text-white border', getCategoryColor(dish.category))}>
+                      {dish.category}
+                    </Badge>
+                  </div>
                 </div>
-              </div>
-              <CardHeader>
-                <CardTitle className="text-white text-xl">{dish.name}</CardTitle>
-                <CardDescription className="text-slate-400 line-clamp-2">
-                  {dish.description}
-                </CardDescription>
+                <div className="p-6">
+                  <CardTitle className="text-white text-xl mb-2">{dish.name}</CardTitle>
+                  <CardDescription className="text-slate-400 line-clamp-2">
+                    {dish.description}
+                  </CardDescription>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between border-t border-slate-700 pt-3">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-slate-400 text-sm">
                     <Clock className="w-4 h-4" />
                     <span>{dish.prepTime} min</span>
                   </div>
                   <div className="text-2xl font-bold text-orange-500">
-                    S/ {dish.price.toFixed(2)}
+                    ${dish.price.toFixed(2)}
                   </div>
                 </div>
               </CardContent>
             </Card>
           ))}
-        </div>
-
-        {filteredDishes.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-slate-400 text-lg">No hay platos disponibles en esta categoría</p>
           </div>
         )}
       </div>
 
-      <footer className="bg-slate-950 border-t border-slate-800 mt-12">
+      <footer className="bg-slate-950 border-t border-slate-800 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center">
           <p className="text-slate-500 text-sm">
             © 2024 Restaurant Abocado - Todos los derechos reservados

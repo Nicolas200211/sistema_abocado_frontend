@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3001';
+import { apiClient } from './client';
 
 export interface LoginCredentials {
   username: string;
@@ -16,18 +16,8 @@ export interface LoginResponse {
 
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
+    return apiClient.post<LoginResponse>('/auth/login', credentials, {
+      requiresAuth: false,
     });
-
-    if (!response.ok) {
-      throw new Error('Invalid credentials');
-    }
-
-    return response.json();
   },
 };

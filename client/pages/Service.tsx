@@ -1,37 +1,64 @@
 import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import OrderItem from "@/components/OrderItem";
-import { mockTables, mockDishes } from "@/lib/mockData";
-import { CreditCard, Plus } from "lucide-react";
+import { tablesApi, dishesApi, ordersApi } from "@/lib/api";
+import { CreditCard, Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Service() {
-  const [tables] = useState(mockTables);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
 
-  const dishes = useMemo(() => {
-    return new Map(mockDishes.map((d) => [d.id, d]));
-  }, []);
+  const { data: tables = [], isLoading: tablesLoading } = useQuery({
+    queryKey: ['tables'],
+    queryFn: tablesApi.getAll,
+  });
+
+  const { data: dishes = [], isLoading: dishesLoading } = useQuery({
+    queryKey: ['dishes'],
+    queryFn: dishesApi.getAll,
+  });
+
+  const { data: orders = [], isLoading: ordersLoading } = useQuery({
+    queryKey: ['orders'],
+    queryFn: () => ordersApi.getAll({ status: 'active' }),
+  });
+
+  const dishesMap = useMemo(() => {
+    return new Map(dishes.map((d) => [d.id, d]));
+  }, [dishes]);
+
+  const tablesWithOrders = useMemo(() => {
+    return tables.map(table => {
+      const order = orders.find(o => o.tableId === table.id);
+      return {
+        ...table,
+        currentOrder: order,
+      };
+    });
+  }, [tables, orders]);
 
   const selectedTable = selectedTableId
-    ? tables.find((t) => t.id === selectedTableId)
+    ? tablesWithOrders.find((t) => t.id === selectedTableId)
     : null;
 
-  const occupiedTables = tables.filter((t) => t.status === "occupied");
+  const occupiedTables = tablesWithOrders.filter((t) => t.status === "occupied");
+
+  const isLoading = tablesLoading || dishesLoading || ordersLoading;
 
   return (
     <Layout>
       <div className="space-y-8">
-        
+        {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Servicio</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Mesas y Órdenes</h1>
           <p className="text-slate-400">
             Gestiona las mesas y sus órdenes ({occupiedTables.length} ocupadas)
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+          {/* Tables List */}
           <div className="lg:col-span-2">
             <div className="space-y-3">
               <p className="text-sm font-semibold text-slate-400 uppercase tracking-wide">
@@ -68,7 +95,7 @@ export default function Service() {
                             {table.currentOrder?.items.length || 0} platos
                           </p>
                           <p className="font-bold text-orange-500 text-sm mt-1">
-                            S/ {table.currentOrder?.total.toFixed(2) || "0.00"}
+                            ${table.currentOrder?.total.toFixed(2) || "0.00"}
                           </p>
                         </div>
                       </div>
@@ -79,7 +106,7 @@ export default function Service() {
             </div>
           </div>
 
-          
+          {/* Order Details */}
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-4">
               {selectedTable ? (
@@ -92,7 +119,7 @@ export default function Service() {
                     <div className="space-y-4">
                       <div className="space-y-2 max-h-64 overflow-y-auto">
                         {selectedTable.currentOrder.items.map((item) => {
-                          const dish = dishes.get(item.dishId);
+                          const dish = dishesMap.get(String(item.dishId));
                           if (!dish) return null;
 
                           return (
@@ -106,21 +133,25 @@ export default function Service() {
                                 </span>
                                 <span className={cn(
                                   "px-2 py-0.5 rounded text-xs font-bold",
-                                  item.status === "ready"
-                                    ? "bg-emerald-600 text-emerald-200"
-                                    : item.status === "preparing"
-                                      ? "bg-amber-600 text-amber-200"
-                                      : "bg-red-600 text-red-200"
+                                  item.status === "delivered"
+                                    ? "bg-slate-600 text-slate-200"
+                                    : item.status === "ready"
+                                      ? "bg-emerald-600 text-emerald-200"
+                                      : item.status === "preparing"
+                                        ? "bg-amber-600 text-amber-200"
+                                        : "bg-red-600 text-red-200"
                                 )}>
-                                  {item.status === "ready"
-                                    ? "Listo"
-                                    : item.status === "preparing"
-                                      ? "Preparando"
-                                      : "Pendiente"}
+                                  {item.status === "delivered"
+                                    ? "Entregado"
+                                    : item.status === "ready"
+                                      ? "Listo"
+                                      : item.status === "preparing"
+                                        ? "Preparando"
+                                        : "Pendiente"}
                                 </span>
                               </div>
                               <p className="text-slate-400 text-xs">
-                                S/ {(dish.price * item.quantity).toFixed(2)}
+                                ${(dish.price * item.quantity).toFixed(2)}
                               </p>
                             </div>
                           );
@@ -131,7 +162,7 @@ export default function Service() {
                         <div className="flex justify-between items-center mb-4 text-lg font-bold">
                           <span className="text-white">Total:</span>
                           <span className="text-orange-500">
-                            S/ {selectedTable.currentOrder.total.toFixed(2)}
+                            ${selectedTable.currentOrder.total.toFixed(2)}
                           </span>
                         </div>
 

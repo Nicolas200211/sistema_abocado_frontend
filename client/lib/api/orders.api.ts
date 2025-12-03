@@ -1,13 +1,11 @@
 import { apiClient } from './client';
-import { mockDishes } from '../mockData';
-import { mockTables } from './tables.api';
 
 export interface OrderItem {
   id: string;
-  dishId: string;
+  dishId: number;
   quantity: number;
   notes?: string;
-  status: 'pending' | 'preparing' | 'ready';
+  status: 'pending' | 'preparing' | 'ready' | 'delivered';
   startedAt?: Date;
   completedAt?: Date;
 }
@@ -23,7 +21,7 @@ export interface Order {
 }
 
 export interface CreateOrderItemDto {
-  dishId: string;
+  dishId: number;
   quantity: number;
   notes?: string;
 }
@@ -39,63 +37,40 @@ export interface UpdateOrderDto {
 }
 
 export interface UpdateOrderItemDto {
-  status?: 'pending' | 'preparing' | 'ready';
+  status?: 'pending' | 'preparing' | 'ready' | 'delivered';
 }
 
-
-let mockOrders: Order[] = [];
+const parseOrderDates = (order: any): Order => {
+  return {
+    ...order,
+    total: typeof order.total === 'string' ? parseFloat(order.total) : order.total,
+    createdAt: new Date(order.createdAt),
+    completedAt: order.completedAt ? new Date(order.completedAt) : undefined,
+    items: order.items.map((item: any) => ({
+      ...item,
+      dishId: typeof item.dishId === 'string' ? parseInt(item.dishId, 10) : item.dishId,
+      startedAt: item.startedAt ? new Date(item.startedAt) : undefined,
+      completedAt: item.completedAt ? new Date(item.completedAt) : undefined,
+    })),
+  };
+};
 
 export const ordersApi = {
-  getAll: (params?: { status?: string; tableId?: string }) => {
+  getAll: async (params?: { status?: string; tableId?: string }) => {
     const query = new URLSearchParams();
     if (params?.status) query.append('status', params.status);
     if (params?.tableId) query.append('tableId', params.tableId);
     const queryString = query.toString();
-    return apiClient.get<Order[]>(`/orders${queryString ? `?${queryString}` : ''}`);
+    const orders = await apiClient.get<Order[]>(`/orders${queryString ? `?${queryString}` : ''}`);
+    return orders.map(parseOrderDates);
   },
 
-  getOne: (id: string) => apiClient.get<Order>(`/orders/${id}`),
-
-  
-  
-  create: async (data: CreateOrderDto): Promise<Order> => {
-    
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    
-    const total = data.items.reduce((sum, item) => {
-      const dish = mockDishes.find(d => d.id === item.dishId);
-      return sum + (dish ? dish.price * item.quantity : 0);
-    }, 0);
-
-    
-    const order: Order = {
-      id: `order-${Date.now()}`,
-      tableId: data.tableId,
-      items: data.items.map((item, index) => ({
-        id: `item-${Date.now()}-${index}`,
-        dishId: item.dishId,
-        quantity: item.quantity,
-        notes: item.notes,
-        status: 'pending' as const,
-      })),
-      status: 'active',
-      createdAt: new Date(),
-      total: total * 1.1, 
-    };
-
-    
-    const table = mockTables.find(t => t.id === data.tableId);
-    if (table) {
-      table.status = 'occupied';
-      table.currentOrderId = order.id;
-      table.partySize = data.partySize;
-    }
-
-    mockOrders.push(order);
-    
-    return Promise.resolve(order);
+  getOne: async (id: string) => {
+    const order = await apiClient.get<Order>(`/orders/${id}`);
+    return parseOrderDates(order);
   },
+
+  create: (data: CreateOrderDto) => apiClient.post<Order>('/orders', data),
 
   update: (id: string, data: UpdateOrderDto) =>
     apiClient.patch<Order>(`/orders/${id}`, data),
