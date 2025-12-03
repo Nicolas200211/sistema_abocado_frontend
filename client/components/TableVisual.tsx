@@ -42,14 +42,14 @@ export default function TableVisual({
 
   const config = statusConfig[table.status];
 
-  
+  // Determine number of chairs based on capacity
   const chairCount = Math.min(table.capacity, 6);
   const chairPositions = Array.from({ length: chairCount });
 
-  
+  // Calculate chair positions around table (circular arrangement)
   const getChairPosition = (index: number) => {
     const angle = (index / chairCount) * (2 * Math.PI) - Math.PI / 2;
-    const radius = 80; 
+    const radius = 80; // Distance from center
     const x = Math.cos(angle) * radius;
     const y = Math.sin(angle) * radius;
     return { x, y };
@@ -76,9 +76,9 @@ export default function TableVisual({
         config.border
       )}
     >
-      
+      {/* Table Visual */}
       <div className="relative w-48 h-48 flex items-center justify-center mb-6">
-        
+        {/* Chairs Container */}
         {chairPositions.map((_, index) => {
           const pos = getChairPosition(index);
           const rotation = (index / chairCount) * 360;
@@ -90,7 +90,7 @@ export default function TableVisual({
                 transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))`,
               }}
             >
-              
+              {/* Chair */}
               <div
                 className={cn(
                 "w-8 h-8 rounded-md transition-all duration-200",
@@ -105,7 +105,7 @@ export default function TableVisual({
           );
         })}
 
-        
+        {/* Table */}
         <div
           className={cn(
             "w-32 h-32 rounded-full flex items-center justify-center shadow-lg border-4 border-slate-700 relative z-10",
@@ -123,7 +123,7 @@ export default function TableVisual({
         </div>
       </div>
 
-      
+      {/* Status and Info */}
       <div className="w-full">
         <div className="text-center mb-4">
           <span
@@ -144,7 +144,7 @@ export default function TableVisual({
           </div>
         )}
 
-        
+        {/* Order Status */}
         {orderDetails && (
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-center gap-2 text-slate-300">

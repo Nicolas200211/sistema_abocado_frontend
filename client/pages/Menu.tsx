@@ -98,7 +98,7 @@ export default function Menu() {
     }
 
     const orderItems: CreateOrderItemDto[] = cart.map((item) => ({
-      dishId: item.dishId,
+      dishId: parseInt(item.dishId, 10),
       quantity: item.quantity,
     }));
 
@@ -156,11 +156,11 @@ export default function Menu() {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8 justify-items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {filteredDishes.map((dish: Dish) => {
                 const cartItem = cart.find((item) => item.dishId === dish.id);
                 return (
-                  <div key={dish.id} className="relative w-full flex justify-center">
+                  <div key={dish.id} className="relative">
                     <DishCard
                       dish={dish}
                       interactive={true}
@@ -168,7 +168,7 @@ export default function Menu() {
                       onAdd={() => handleAddToCart(dish.id)}
                     />
                     {cartItem && (
-                      <div className="absolute top-4 right-[calc(50%-110px)] sm:right-[calc(50%-140px)] bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                      <div className="absolute top-4 right-4 bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
                         {cartItem.quantity}
                       </div>
                     )}
@@ -208,7 +208,7 @@ export default function Menu() {
                                 {dish.name}
                               </p>
                               <p className="text-xs text-slate-400 mt-1">
-                                S/ {(dish.price * cartItem.quantity).toFixed(2)}
+                                ${(dish.price * cartItem.quantity).toFixed(2)}
                               </p>
                             </div>
                           </div>
@@ -239,18 +239,18 @@ export default function Menu() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm text-slate-400">
                         <span>Subtotal:</span>
-                        <span>S/ {cartTotal.toFixed(2)}</span>
+                        <span>${cartTotal.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm text-slate-400">
                         <span>Impuestos (10%):</span>
-                        <span>S/ {(cartTotal * 0.1).toFixed(2)}</span>
+                        <span>${(cartTotal * 0.1).toFixed(2)}</span>
                       </div>
                     </div>
 
                     <div className="flex justify-between text-lg font-bold text-white bg-orange-600 bg-opacity-20 p-3 rounded-lg border border-orange-600 border-opacity-30">
                       <span>Total:</span>
                       <span className="text-orange-500">
-                        S/ {(cartTotal * 1.1).toFixed(2)}
+                        ${(cartTotal * 1.1).toFixed(2)}
                       </span>
                     </div>
 

@@ -1,44 +1,88 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import OrderItem from "@/components/OrderItem";
-import { mockOrders, mockDishes } from "@/lib/mockData";
-import { AlertCircle, Clock, CheckCircle, Flame } from "lucide-react";
+import { ordersApi, dishesApi, tablesApi } from "@/lib/api";
+import { AlertCircle, Clock, CheckCircle, Flame, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type FilterStatus = "all" | "pending" | "preparing" | "ready";
 
 export default function Kitchen() {
-  const [orders, setOrders] = useState(mockOrders);
-  const [filter, setFilter] = useState<FilterStatus>("all");
+  const queryClient = useQueryClient();
 
-  const dishes = useMemo(() => {
-    return new Map(mockDishes.map((d) => [d.id, d]));
-  }, []);
+  const { data: orders = [], isLoading: ordersLoading } = useQuery({
+    queryKey: ['orders'],
+    queryFn: () => ordersApi.getAll({ status: 'active' }),
+  });
+
+  const { data: dishes = [], isLoading: dishesLoading } = useQuery({
+    queryKey: ['dishes'],
+    queryFn: dishesApi.getAll,
+  });
+
+  const { data: tables = [], isLoading: tablesLoading } = useQuery({
+    queryKey: ['tables'],
+    queryFn: tablesApi.getAll,
+  });
+
+  const updateItemStatusMutation = useMutation({
+    mutationFn: ({ orderId, itemId, status }: { orderId: string; itemId: string; status: 'pending' | 'preparing' | 'ready' | 'delivered' }) =>
+      ordersApi.updateItem(orderId, itemId, { status }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      if (variables.status === 'delivered') {
+        toast.success('Plato enviado al mozo');
+      } else {
+        toast.success('Estado actualizado');
+      }
+    },
+    onError: () => {
+      toast.error('Error al actualizar el estado');
+    },
+  });
+
+  const dishesMap = useMemo(() => {
+    return new Map(dishes.map((d) => [d.id, d]));
+  }, [dishes]);
+
+  const tablesMap = useMemo(() => {
+    return new Map(tables.map((t) => [t.id, t]));
+  }, [tables]);
 
   const allItems = useMemo(() => {
     return orders.flatMap((order) =>
-      order.items.map((item) => ({
-        ...item,
-        orderId: order.id,
-        tableId: order.tableId,
-      }))
+      order.items
+        .map((item) => {
+          const dish = dishesMap.get(String(item.dishId));
+          return {
+            ...item,
+            orderId: order.id,
+            tableId: order.tableId,
+            dishCategory: dish?.category,
+          };
+        })
+        // Cocina solo ve platos principales y lados (NO bebidas, NO postres) y NO items entregados
+        .filter((item) => 
+          (item.dishCategory === 'principal' || 
+           item.dishCategory === 'lado') && 
+          item.status !== 'delivered'
+        )
     );
-  }, [orders]);
+  }, [orders, dishesMap]);
 
   const pendingItems = useMemo(() => {
-    const items = allItems.filter((i) => i.status === "pending");
-    return filter === "all" ? items : items;
-  }, [allItems, filter]);
+    return allItems.filter((i) => i.status === "pending");
+  }, [allItems]);
 
   const preparingItems = useMemo(() => {
-    const items = allItems.filter((i) => i.status === "preparing");
-    return filter === "all" ? items : items;
-  }, [allItems, filter]);
+    return allItems.filter((i) => i.status === "preparing");
+  }, [allItems]);
 
   const readyItems = useMemo(() => {
-    const items = allItems.filter((i) => i.status === "ready");
-    return filter === "all" ? items : items;
-  }, [allItems, filter]);
+    return allItems.filter((i) => i.status === "ready");
+  }, [allItems]);
 
   const stats = {
     pending: pendingItems.length,
@@ -49,39 +93,19 @@ export default function Kitchen() {
   const handleStatusChange = (
     orderId: string,
     itemId: string,
-    newStatus: string
+    newStatus: "pending" | "preparing" | "ready"
   ) => {
-    setOrders((prevOrders) =>
-      prevOrders.map((order) => {
-        if (order.id === orderId) {
-          return {
-            ...order,
-            items: order.items.map((item) => {
-              if (item.id === itemId) {
-                return {
-                  ...item,
-                  status: newStatus as "pending" | "preparing" | "ready",
-                  startedAt:
-                    newStatus === "preparing" ? new Date() : item.startedAt,
-                  completedAt:
-                    newStatus === "ready" ? new Date() : item.completedAt,
-                };
-              }
-              return item;
-            }),
-          };
-        }
-        return order;
-      })
-    );
+    updateItemStatusMutation.mutate({ orderId, itemId, status: newStatus });
   };
+
+  const isLoading = ordersLoading || dishesLoading || tablesLoading;
 
   const OrderCard = ({
     item,
     dish,
   }: {
     item: typeof allItems extends Array<infer T> ? T : never;
-    dish: ReturnType<typeof dishes.get>;
+    dish: ReturnType<typeof dishesMap.get>;
   }) => {
     if (!dish) return null;
 
@@ -107,6 +131,13 @@ export default function Kitchen() {
             border: "border-emerald-300",
             badge: "bg-emerald-100 text-emerald-700",
             indicator: "bg-emerald-500",
+          };
+        case "delivered":
+          return {
+            bg: "bg-slate-100",
+            border: "border-slate-300",
+            badge: "bg-slate-200 text-slate-600",
+            indicator: "bg-slate-400",
           };
         default:
           return {
@@ -135,7 +166,7 @@ export default function Kitchen() {
               {item.quantity}x {dish.name}
             </p>
             <p className="text-xs text-slate-600 mt-1">
-              Mesa {item.tableId.replace("t", "")}
+              Mesa {tablesMap.get(item.tableId)?.number || item.tableId}
             </p>
           </div>
           <div className="text-right">
@@ -144,7 +175,11 @@ export default function Kitchen() {
                 ? "Pendiente"
                 : item.status === "preparing"
                   ? "En Preparación"
-                  : "Listo"}
+                  : item.status === "ready"
+                    ? "Listo"
+                    : item.status === "delivered"
+                      ? "Enviado"
+                      : "Listo"}
             </span>
           </div>
         </div>
@@ -157,41 +192,59 @@ export default function Kitchen() {
         )}
 
         <div className="flex gap-2">
-          {item.status !== "pending" && (
-            <button
-              onClick={() => handleStatusChange(item.orderId, item.id, "pending")}
-              className="flex-1 px-2 py-1 text-xs font-semibold text-red-600 bg-white border border-red-200 rounded hover:bg-red-50 transition-colors"
-            >
-              Pendiente
-            </button>
-          )}
-          {item.status !== "preparing" && (
-            <button
-              onClick={() =>
-                handleStatusChange(item.orderId, item.id, "preparing")
-              }
-              className="flex-1 px-2 py-1 text-xs font-semibold text-amber-600 bg-white border border-amber-200 rounded hover:bg-amber-50 transition-colors"
-            >
-              Preparar
-            </button>
-          )}
-          {item.status !== "ready" && (
-            <button
-              onClick={() => handleStatusChange(item.orderId, item.id, "ready")}
-              className="flex-1 px-2 py-1 text-xs font-semibold text-emerald-600 bg-white border border-emerald-200 rounded hover:bg-emerald-50 transition-colors"
-            >
-              Listo
-            </button>
+          {item.status === "ready" ? (
+            <div className="flex-1 px-2 py-1 text-xs font-semibold text-emerald-700 bg-emerald-100 border border-emerald-300 rounded text-center">
+              Listo - Disponible para Mozo
+            </div>
+          ) : (
+            <>
+              {item.status !== "pending" && (
+                <button
+                  onClick={() => handleStatusChange(item.orderId, item.id, "pending")}
+                  className="flex-1 px-2 py-1 text-xs font-semibold text-red-600 bg-white border border-red-200 rounded hover:bg-red-50 transition-colors"
+                >
+                  Pendiente
+                </button>
+              )}
+              {item.status !== "preparing" && (
+                <button
+                  onClick={() =>
+                    handleStatusChange(item.orderId, item.id, "preparing")
+                  }
+                  className="flex-1 px-2 py-1 text-xs font-semibold text-amber-600 bg-white border border-amber-200 rounded hover:bg-amber-50 transition-colors"
+                >
+                  Preparar
+                </button>
+              )}
+              {item.status !== "ready" && (
+                <button
+                  onClick={() => handleStatusChange(item.orderId, item.id, "ready")}
+                  className="flex-1 px-2 py-1 text-xs font-semibold text-emerald-600 bg-white border border-emerald-200 rounded hover:bg-emerald-50 transition-colors"
+                >
+                  Listo
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
     );
   };
 
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-96">
+          <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="space-y-8">
-        
+        {/* Header */}
         <div className="text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
             <Flame className="w-8 h-8 text-orange-600" />
@@ -205,9 +258,9 @@ export default function Kitchen() {
           </p>
         </div>
 
-        
+        {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          
+          {/* Pendientes */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-50 to-red-100 p-6 border border-red-200 shadow-lg">
             <div className="absolute top-0 right-0 w-24 h-24 bg-red-200 rounded-full -mr-8 -mt-8 opacity-20"></div>
             <div className="relative z-10">
@@ -226,7 +279,7 @@ export default function Kitchen() {
             </div>
           </div>
 
-          
+          {/* En Preparación */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 p-6 border border-amber-200 shadow-lg">
             <div className="absolute top-0 right-0 w-24 h-24 bg-amber-200 rounded-full -mr-8 -mt-8 opacity-20"></div>
             <div className="relative z-10">
@@ -243,7 +296,7 @@ export default function Kitchen() {
             </div>
           </div>
 
-          
+          {/* Listos */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 border border-emerald-200 shadow-lg">
             <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-200 rounded-full -mr-8 -mt-8 opacity-20"></div>
             <div className="relative z-10">
@@ -263,9 +316,9 @@ export default function Kitchen() {
           </div>
         </div>
 
-        
+        {/* Kanban Board */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
+          {/* Column: Pendientes */}
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-4 h-4 rounded-full bg-red-500"></div>
@@ -283,10 +336,10 @@ export default function Kitchen() {
                 </div>
               ) : (
                 pendingItems.map((item) => {
-                  const dish = dishes.get(item.dishId);
+                  const dish = dishesMap.get(String(item.dishId));
                   return (
                     <OrderCard
-                      key={item.id}
+                      key={`${item.orderId}-${item.id}`}
                       item={item}
                       dish={dish}
                     />
@@ -296,7 +349,7 @@ export default function Kitchen() {
             </div>
           </div>
 
-          
+          {/* Column: En Preparación */}
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-4 h-4 rounded-full bg-amber-500"></div>
@@ -316,10 +369,10 @@ export default function Kitchen() {
                 </div>
               ) : (
                 preparingItems.map((item) => {
-                  const dish = dishes.get(item.dishId);
+                  const dish = dishesMap.get(String(item.dishId));
                   return (
                     <OrderCard
-                      key={item.id}
+                      key={`${item.orderId}-${item.id}`}
                       item={item}
                       dish={dish}
                     />
@@ -329,7 +382,7 @@ export default function Kitchen() {
             </div>
           </div>
 
-          
+          {/* Column: Listos */}
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-4 h-4 rounded-full bg-emerald-500"></div>
@@ -349,10 +402,10 @@ export default function Kitchen() {
                 </div>
               ) : (
                 readyItems.map((item) => {
-                  const dish = dishes.get(item.dishId);
+                  const dish = dishesMap.get(String(item.dishId));
                   return (
                     <OrderCard
-                      key={item.id}
+                      key={`${item.orderId}-${item.id}`}
                       item={item}
                       dish={dish}
                     />

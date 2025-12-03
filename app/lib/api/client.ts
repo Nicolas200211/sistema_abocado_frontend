@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface RequestOptions extends RequestInit {
   requiresAuth?: boolean;
@@ -33,40 +33,17 @@ class ApiClient {
       }
     }
 
-    try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        ...restOptions,
-        headers: requestHeaders,
-      });
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      ...restOptions,
+      headers: requestHeaders,
+    });
 
-      if (!response.ok) {
-        let errorMessage = `Error ${response.status}`;
-        
-        try {
-          const error = await response.json();
-          errorMessage = error.message || error.error || errorMessage;
-        } catch {
-          if (response.status === 401) {
-            errorMessage = 'No autorizado. Verifica tus credenciales.';
-          } else if (response.status === 404) {
-            errorMessage = 'Recurso no encontrado';
-          } else if (response.status >= 500) {
-            errorMessage = 'Error del servidor. Intenta más tarde.';
-          } else if (response.status === 0 || !response.status) {
-            errorMessage = 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo.';
-          }
-        }
-        
-        throw new Error(errorMessage);
-      }
-
-      return response.json();
-    } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté corriendo en http://localhost:3001');
-      }
-      throw error;
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Request failed' }));
+      throw new Error(error.message || `HTTP ${response.status}`);
     }
+
+    return response.json();
   }
 
   async get<T>(endpoint: string, options?: RequestOptions): Promise<T> {

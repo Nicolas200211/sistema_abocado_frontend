@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth.context';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,14 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,126 +31,116 @@ export default function Login() {
       await login({ username, password });
       navigate('/dashboard');
     } catch (err) {
-      setError('Usuario o contraseña incorrectos');
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      
+      if (errorMessage.includes('conectar') || errorMessage.includes('servidor')) {
+        setError('No se pudo conectar con el servidor. Verifica que el backend esté corriendo.');
+      } else if (errorMessage.includes('401') || errorMessage.includes('credenciales') || errorMessage.includes('Invalid')) {
+        setError('Usuario o contraseña incorrectos');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-        
-        <div className="hidden lg:block relative h-[600px] rounded-2xl overflow-hidden shadow-2xl">
-          <img 
-            src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80" 
-            alt="Restaurant Abocado" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-          <div className="absolute bottom-0 left-0 right-0 p-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-orange-600/90 backdrop-blur-sm p-3 rounded-xl">
-                <ChefHat className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold text-white">Restaurant Abocado</h2>
-                <p className="text-slate-200">Ayacucho, Huamanga, Perú</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-grid-slate-800/[0.2] bg-[size:20px_20px] [mask-image:radial-gradient(ellipse_at_center,white,transparent)]" />
+      <Card className="w-full max-w-md bg-slate-800/90 backdrop-blur-xl border-slate-700/50 shadow-2xl relative z-10">
+        <CardHeader className="space-y-6 text-center pb-8">
+          <div className="flex justify-center">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl blur-xl opacity-50" />
+              <div className="relative bg-gradient-to-br from-orange-500 to-red-600 p-5 rounded-2xl shadow-lg">
+                <ChefHat className="w-10 h-10 text-white" />
               </div>
             </div>
           </div>
-        </div>
-
-        
-        <Card className="w-full bg-slate-800 border-slate-700">
-          <CardHeader className="space-y-4 text-center">
-            <div className="flex justify-center">
-              <div className="bg-orange-600 p-4 rounded-full">
-                <ChefHat className="w-12 h-12 text-white" />
-              </div>
-            </div>
-            <CardTitle className="text-3xl font-bold text-white">
+          <div className="space-y-2">
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
               Abocado Restaurant
             </CardTitle>
-            <CardDescription className="text-slate-400">
-              Ingresa tus credenciales para acceder
+            <CardDescription className="text-slate-400 text-base">
+              Sistema de gestión de restaurante
             </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <Alert variant="destructive" className="bg-red-900 border-red-800">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <Alert variant="destructive" className="bg-red-950/50 border-red-800/50 backdrop-blur-sm">
+                <AlertDescription className="text-red-200">{error}</AlertDescription>
+              </Alert>
+            )}
 
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-slate-200 font-medium">
+                Usuario
+              </Label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Ingresa tu usuario"
+                  className="pl-12 h-12 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-orange-500 focus:ring-orange-500/20 transition-all"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-slate-200 font-medium">
+                Contraseña
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Ingresa tu contraseña"
+                  className="pl-12 h-12 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-orange-500 focus:ring-orange-500/20 transition-all"
+                  required
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-12 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold shadow-lg shadow-orange-500/25 transition-all duration-200"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Ingresando...' : 'Iniciar Sesión'}
+            </Button>
+
+            <div className="bg-slate-900/50 backdrop-blur-sm rounded-xl p-4 space-y-3 border border-slate-700/50">
+              <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">
+                Usuarios de prueba
+              </p>
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-slate-300">
-                  Usuario
-                </Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <Input
-                    id="username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Ingresa tu usuario"
-                    className="pl-10 bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
-                    required
-                  />
+                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50">
+                  <span className="text-sm text-slate-300 font-medium">Admin</span>
+                  <span className="text-xs text-orange-400 font-mono">admin / admin123</span>
+                </div>
+                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50">
+                  <span className="text-sm text-slate-300 font-medium">Chef</span>
+                  <span className="text-xs text-orange-400 font-mono">chef / chef123</span>
+                </div>
+                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50">
+                  <span className="text-sm text-slate-300 font-medium">Mozo</span>
+                  <span className="text-xs text-orange-400 font-mono">mozo / mozo123</span>
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-300">
-                  Contraseña
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Ingresa tu contraseña"
-                    className="pl-10 bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
-                    required
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-6"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Ingresando...' : 'Iniciar Sesión'}
-              </Button>
-
-              <div className="bg-slate-700 rounded-lg p-4 space-y-2">
-                <p className="text-xs text-slate-400 font-semibold">
-                  Usuarios de prueba:
-                </p>
-                <div className="text-xs text-slate-300 space-y-1">
-                  <div className="flex justify-between">
-                    <span>Admin:</span>
-                    <span className="text-orange-400">admin / admin123</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Chef:</span>
-                    <span className="text-orange-400">chef / chef123</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Mozo:</span>
-                    <span className="text-orange-400">mozo / mozo123</span>
-                  </div>
-                </div>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
